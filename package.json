@@ -1,5 +1,5 @@
 {
-  "name": "shp-write",
+  "name": "@oseberg/shp-write",
   "version": "0.3.2",
   "description": "write shapefiles from pure javascript",
   "main": "index.js",
