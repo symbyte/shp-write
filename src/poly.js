@@ -1,4 +1,5 @@
 var ext = require('./extent');
+const { forEach, reduce }= require('./util');
 
 module.exports.write = function writePoints(geometries, extent, shpView, shxView, TYPE) {
 
@@ -6,14 +7,14 @@ module.exports.write = function writePoints(geometries, extent, shpView, shxView
         shxI = 0,
         shxOffset = 100;
 
-    geometries.forEach(writePolyLine);
+    forEach(geometries, writePolyLine);
 
     function writePolyLine(coordinates, i) {
 
         var flattened = justCoords(coordinates),
             contentLength = (flattened.length * 16) + 48;
 
-        var featureExtent = flattened.reduce(function(extent, c) {
+        var featureExtent = reduce(flattened, function(extent, c) {
             return ext.enlarge(extent, c);
         }, ext.blank());
 
@@ -35,7 +36,7 @@ module.exports.write = function writePoints(geometries, extent, shpView, shxView
         shpView.setInt32(shpI + 48, flattened.length, true); // POINTS
         shpView.setInt32(shpI + 52, 0, true); // The only part - index zero
 
-        flattened.forEach(function writeLine(coords, i) {
+        forEach(flattened, function writeLine(coords, i) {
             shpView.setFloat64(shpI + 56 + (i * 16), coords[0], true); // X
             shpView.setFloat64(shpI + 56 + (i * 16) + 8, coords[1], true); // Y
         });
@@ -55,21 +56,21 @@ module.exports.shxLength = function(geometries) {
 };
 
 module.exports.extent = function(coordinates) {
-    return justCoords(coordinates).reduce(function(extent, c) {
+    return reduce(justCoords(coordinates), function(extent, c) {
         return ext.enlarge(extent, c);
     }, ext.blank());
 };
 
 function totalPoints(geometries) {
     var sum = 0;
-    geometries.forEach(function(g) { sum += g.length; });
+    forEach(geometries, function(g) { sum += g.length; });
     return sum;
 }
 
 function justCoords(coords, l) {
     if (l === undefined) l = [];
     if (typeof coords[0][0] == 'object') {
-        return coords.reduce(function(memo, c) {
+        return reduce(coords, function(memo, c) {
             return memo.concat(justCoords(c));
         }, l);
     } else {
